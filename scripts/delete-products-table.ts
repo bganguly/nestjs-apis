@@ -3,13 +3,9 @@ import 'dotenv/config';
 import { DeleteTableCommand, DescribeTableCommand, DynamoDBClient, ResourceNotFoundException } from '@aws-sdk/client-dynamodb';
 
 async function main(): Promise<void> {
-  const tableName = process.env.DYNAMODB_TABLE_NAME;
+  const tableName = process.env.DYNAMODB_TABLE_NAME ?? 'Products';
   const region = process.env.AWS_REGION ?? 'us-east-1';
   const endpoint = process.env.AWS_ENDPOINT;
-
-  if (!tableName) {
-    throw new Error('DYNAMODB_TABLE_NAME is required');
-  }
 
   const client = new DynamoDBClient({
     region,

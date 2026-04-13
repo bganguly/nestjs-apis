@@ -68,6 +68,8 @@ DYNAMODB_TABLE_NAME=Products
 # AWS_ENDPOINT=http://localhost:8000
 ```
 
+If `DYNAMODB_TABLE_NAME` is omitted, the app and scripts default to `Products`.
+
 ## Quickstart (Infra Up/Down)
 
 This project includes a simplified lifecycle flow:
