@@ -6,30 +6,21 @@ The item data shape is user-relatable and React-friendly: title, brand, category
 
 ## Quick Run (Smallest Possible)
 
-1. Start clean and install dependencies:
-
 ```bash
-rm -rf node_modules && \
-npm install
-```
+# Start clean and install dependencies
+rm -rf node_modules && npm install
 
-2. Start infra + API:
-
-```bash
+# Start infra + API
 npm run quickstart
-```
 
-3. Quick check (in a new terminal):
-
-```bash
+# Quick check (in a new terminal)
 curl -s "http://localhost:3000/api/products?limit=5" | jq
-```
 
-4. Simplest teardown:
-
-```bash
+# Simplest teardown
 npm run infra:down
 ```
+
+If `quickstart` is running in the current terminal, run the quick check and teardown in a second terminal.
 
 
 ## Why This Data Model
@@ -74,19 +65,15 @@ This avoids full table scans for common list views, which is important at millio
 
 ## Setup
 
-1. Install deps
-
 ```bash
+# Install deps
 npm install
-```
 
-2. Create env file
-
-```bash
+# Create env file
 cp .env.example .env
 ```
 
-3. Configure `.env`
+Configure `.env`:
 
 ```env
 PORT=3000
@@ -106,64 +93,47 @@ This project includes a simplified lifecycle flow:
 - `infra:down`: deletes the DynamoDB table.
 - `quickstart`: runs `infra:up`, then starts the API in dev mode.
 
-1. One-command startup (infra + API):
-
 ```bash
+# One-command startup (infra + API)
 npm run quickstart
-```
 
-This keeps the terminal attached while the API is running.
-
-2. Bring infra up only (default 1000 items):
-
-```bash
+# Bring infra up only (default 1000 items)
 npm run infra:up
-```
 
-3. Optional custom seed size:
-
-```bash
+# Optional custom seed size
 npm run infra:up -- --count=5000 --batch=25
-```
 
-4. Start API in a second terminal:
-
-```bash
+# Start API in a second terminal
 npm run start:dev
-```
 
-5. Tear infra down when done:
-
-```bash
+# Tear infra down when done
 npm run infra:down
 ```
 
 Notes:
 
+- `quickstart` keeps the terminal attached while the API is running.
 - For AWS cloud usage, ensure AWS credentials are configured in your environment.
 - For local DynamoDB, set `AWS_ENDPOINT` in `.env`.
 
 ## Create Table
 
 ```bash
+# Create the DynamoDB table
 npm run create:table
 ```
 
 ## Add Data
 
-### Option A: Synthetic Seed (recommended to start)
-
 ```bash
+# Option A: synthetic seed (recommended to start)
 npm run seed:synthetic -- --count=10000 --batch=25
-```
 
-Run repeatedly to grow toward larger scales.
-
-### Option B: Import Public CSV Dataset
-
-```bash
+# Option B: import public CSV dataset
 npm run import:csv -- --file=./data/products.csv
 ```
+
+Run synthetic seed repeatedly to grow toward larger scales.
 
 Notes:
 
@@ -173,15 +143,11 @@ Notes:
 
 ## Run API
 
-Dev mode:
-
 ```bash
+# Dev mode
 npm run start:dev
-```
 
-Build + prod mode:
-
-```bash
+# Build + prod mode
 npm run build
 npm run start:prod
 ```
@@ -192,15 +158,11 @@ Base URL: `http://localhost:3000/api`
 
 After starting the API, run these from another terminal.
 
-1. List products:
-
 ```bash
+# 1) List products
 curl -s "http://localhost:3000/api/products?limit=5" | jq
-```
 
-2. Create a product:
-
-```bash
+# 2) Create a product
 curl -s -X POST "http://localhost:3000/api/products" \
 	-H "Content-Type: application/json" \
 	-d '{
@@ -216,23 +178,14 @@ curl -s -X POST "http://localhost:3000/api/products" \
 		"seller": "SoundPeak Store",
 		"tags": ["portable", "wireless"]
 	}' | jq
-```
 
-3. List by category and price:
-
-```bash
+# 3) List by category and price
 curl -s "http://localhost:3000/api/products?category=electronics&minPrice=20&maxPrice=200&limit=10" | jq
-```
 
-4. Fetch by product ID (replace `<PRODUCT_ID>`):
-
-```bash
+# 4) Fetch by product ID (replace <PRODUCT_ID>)
 curl -s "http://localhost:3000/api/products/<PRODUCT_ID>" | jq
-```
 
-5. Replace product (PUT):
-
-```bash
+# 5) Replace product (PUT)
 curl -s -X PUT "http://localhost:3000/api/products/<PRODUCT_ID>" \
 	-H "Content-Type: application/json" \
 	-d '{
@@ -248,11 +201,8 @@ curl -s -X PUT "http://localhost:3000/api/products/<PRODUCT_ID>" \
 		"seller": "SoundPeak Store",
 		"tags": ["portable", "wireless", "bluetooth"]
 	}' | jq
-```
 
-6. Partial update product (PATCH):
-
-```bash
+# 6) Partial update product (PATCH)
 curl -s -X PATCH "http://localhost:3000/api/products/<PRODUCT_ID>" \
 	-H "Content-Type: application/json" \
 	-d '{
@@ -260,78 +210,46 @@ curl -s -X PATCH "http://localhost:3000/api/products/<PRODUCT_ID>" \
 		"inStock": true,
 		"tags": ["portable", "sale"]
 	}' | jq
-```
 
-7. Delete product (DELETE):
-
-```bash
+# 7) Delete product (DELETE)
 curl -s -X DELETE "http://localhost:3000/api/products/<PRODUCT_ID>" | jq
-```
 
-8. Full manual pagination sequence (page 1, then page 2, then page 3):
-
-Fetch page 1 and print cursor only.
-
-```bash
+# 8) Manual pagination page 1 + cursor
 PAGE1=$(curl -s "http://localhost:3000/api/products?category=electronics&minPrice=20&maxPrice=200&limit=10")
 CURSOR1=$(echo "$PAGE1" | jq -r '.nextCursor')
 echo "CURSOR1=$CURSOR1"
-```
 
-Fetch page 2 with cursor from page 1, then print cursor only.
-
-```bash
+# 8) Manual pagination page 2 + cursor
 ENCODED_CURSOR1=$(printf '%s' "$CURSOR1" | jq -sRr @uri)
 PAGE2=$(curl -s "http://localhost:3000/api/products?category=electronics&minPrice=20&maxPrice=200&limit=10&cursor=$ENCODED_CURSOR1")
 CURSOR2=$(echo "$PAGE2" | jq -r '.nextCursor')
 echo "CURSOR2=$CURSOR2"
-```
 
-Fetch page 3 with cursor from page 2, then print cursor only.
-
-```bash
+# 8) Manual pagination page 3 + cursor
 ENCODED_CURSOR2=$(printf '%s' "$CURSOR2" | jq -sRr @uri)
 PAGE3=$(curl -s "http://localhost:3000/api/products?category=electronics&minPrice=20&maxPrice=200&limit=10&cursor=$ENCODED_CURSOR2")
 CURSOR3=$(echo "$PAGE3" | jq -r '.nextCursor')
 echo "CURSOR3=$CURSOR3"
-```
 
-Optional: print item counts only (no full response body):
-
-```bash
+# 8) Optional counts only (no full response body)
 echo "PAGE1_COUNT=$(echo "$PAGE1" | jq -r '.count')"
 echo "PAGE2_COUNT=$(echo "$PAGE2" | jq -r '.count')"
 echo "PAGE3_COUNT=$(echo "$PAGE3" | jq -r '.count')"
-```
 
-9. Count total rows before/after pagination tests:
-
-Count all available product rows:
-
-```bash
+# 9) Count total rows (all products)
 npm run count:products
-```
 
-Count rows for the same filter scope you paginate:
-
-```bash
+# 9) Count rows for same pagination filter scope
 npm run count:products -- --category=electronics --minPrice=20 --maxPrice=200
-```
 
-You can run the count once before pagination and once after to verify whether the underlying dataset size changed.
-
-10. Pagination utility (attempts up to 5 pages, stops early if no `nextCursor`):
-
-```bash
+# 10) Pagination utility (attempts up to 5 pages)
 npm run demo:pagination
-```
 
-If your dataset returns fewer than 5 pages, this will stop early (expected behavior).
-To force more pages for testing, use a smaller page size:
-
-```bash
+# 10) Force more pages for testing with smaller page size
 npm run demo:pagination -- --limit=2 --pages=5
 ```
+
+If your dataset returns fewer than 5 pages, pagination utility stops early (expected behavior).
 
 Example output style:
 
