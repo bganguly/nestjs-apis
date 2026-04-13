@@ -4,10 +4,11 @@ import { randomUUID } from 'node:crypto';
 import { createReadStream } from 'node:fs';
 
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { BatchWriteCommand, DynamoDBDocumentClient, WriteRequest } from '@aws-sdk/lib-dynamodb';
+import { BatchWriteCommand, DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 import { parse } from 'csv-parse';
 
 type GenericRow = Record<string, string | undefined>;
+type BatchPutRequest = { PutRequest: { Item: Record<string, unknown> } };
 
 async function main(): Promise<void> {
   const tableName = process.env.DYNAMODB_TABLE_NAME ?? 'Products';
@@ -35,7 +36,7 @@ async function main(): Promise<void> {
     }),
   );
 
-  let batch: WriteRequest[] = [];
+  let batch: BatchPutRequest[] = [];
   let total = 0;
 
   for await (const row of parser) {
@@ -149,9 +150,9 @@ function parseArgs(args: string[]): { file?: string } {
 async function writeBatchWithRetry(
   client: DynamoDBDocumentClient,
   tableName: string,
-  batch: WriteRequest[],
+  batch: BatchPutRequest[],
 ): Promise<void> {
-  let requestItems: Record<string, WriteRequest[]> = {
+  let requestItems: Record<string, BatchPutRequest[]> = {
     [tableName]: batch,
   };
 
@@ -168,14 +169,26 @@ async function writeBatchWithRetry(
       return;
     }
 
+    const retryBatch: BatchPutRequest[] = [];
+    for (const request of unprocessed) {
+      const item = request.PutRequest?.Item;
+      if (item) {
+        retryBatch.push({ PutRequest: { Item: item } });
+      }
+    }
+
+    if (retryBatch.length === 0) {
+      return;
+    }
+
     attempts += 1;
     if (attempts > 10) {
-      throw new Error(`Exceeded retries with ${unprocessed.length} unprocessed rows`);
+      throw new Error(`Exceeded retries with ${retryBatch.length} unprocessed rows`);
     }
 
     const waitMs = Math.min(1000, 25 * 2 ** attempts);
     await new Promise((resolve) => setTimeout(resolve, waitMs));
-    requestItems = { [tableName]: unprocessed };
+    requestItems = { [tableName]: retryBatch };
   }
 }
 
