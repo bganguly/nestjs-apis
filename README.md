@@ -14,13 +14,13 @@ The item data shape is user-relatable and React-friendly: title, brand, category
 	- [Create Table](#create-table)
 	- [Add Data](#add-data)
 - [API](#api)
-- [Run API](#run-api)
-- [Smoke Tests (curl)](#smoke-tests-curl)
-- [Endpoints](#endpoints)
-- [Cursor vs Page/Offset](#cursor-vs-pageoffset)
-- [Example Create Payload](#example-create-payload)
-- [Scale Guidance](#scale-guidance)
-- [React App Compatibility](#react-app-compatibility)
+		- [Run API](#run-api)
+		- [Smoke Tests (curl)](#smoke-tests-curl)
+		- [Endpoints](#endpoints)
+		- [Cursor vs Page/Offset](#cursor-vs-pageoffset)
+		- [Example Create Payload](#example-create-payload)
+		- [Scale Guidance](#scale-guidance)
+		- [React App Compatibility](#react-app-compatibility)
 
 
 ## Quick Run (Smallest Possible)
@@ -296,7 +296,7 @@ Many UIs show page numbers, but this API intentionally uses cursor pagination fo
 - Cursor pagination uses the returned `nextCursor` as an opaque continuation token, keeping reads proportional to page size.
 - Frontends typically do not inspect cursor contents; they store and resend it while still presenting page numbers in the UI.
 
-## Example Create Payload
+### Example Create Payload
 
 ```json
 {
@@ -314,7 +314,7 @@ Many UIs show page numbers, but this API intentionally uses cursor pagination fo
 }
 ```
 
-## Scale Guidance
+### Scale Guidance
 
 - Start with on-demand billing (`PAY_PER_REQUEST`).
 - Keep hot partitions low with good key cardinality.
@@ -322,7 +322,7 @@ Many UIs show page numbers, but this API intentionally uses cursor pagination fo
 - Add GSIs only for real query patterns.
 - Ingest in batches and retry unprocessed writes.
 
-## React App Compatibility
+### React App Compatibility
 
 The model maps directly to typical UI needs:
 
