@@ -230,33 +230,33 @@ curl -s -X PATCH "http://localhost:3000/api/products/<PRODUCT_ID>" \
 # 7) Delete product (DELETE)
 curl -s -X DELETE "http://localhost:3000/api/products/<PRODUCT_ID>" | jq
 
-# 8) Manual pagination page 1 + cursor
+# 8) Count total rows (all products)
+npm run count:products
+
+# 8) Count rows for same pagination filter scope
+npm run count:products -- --category=electronics --minPrice=20 --maxPrice=200
+
+# 9) Manual pagination page 1 + cursor
 PAGE1=$(curl -s "http://localhost:3000/api/products?category=electronics&minPrice=20&maxPrice=200&limit=10")
 CURSOR1=$(echo "$PAGE1" | jq -r '.nextCursor')
 echo "CURSOR1=$CURSOR1"
 
-# 8) Manual pagination page 2 + cursor
+# 9) Manual pagination page 2 + cursor
 ENCODED_CURSOR1=$(printf '%s' "$CURSOR1" | jq -sRr @uri)
 PAGE2=$(curl -s "http://localhost:3000/api/products?category=electronics&minPrice=20&maxPrice=200&limit=10&cursor=$ENCODED_CURSOR1")
 CURSOR2=$(echo "$PAGE2" | jq -r '.nextCursor')
 echo "CURSOR2=$CURSOR2"
 
-# 8) Manual pagination page 3 + cursor
+# 9) Manual pagination page 3 + cursor
 ENCODED_CURSOR2=$(printf '%s' "$CURSOR2" | jq -sRr @uri)
 PAGE3=$(curl -s "http://localhost:3000/api/products?category=electronics&minPrice=20&maxPrice=200&limit=10&cursor=$ENCODED_CURSOR2")
 CURSOR3=$(echo "$PAGE3" | jq -r '.nextCursor')
 echo "CURSOR3=$CURSOR3"
 
-# 8) Optional counts only (no full response body)
+# 9) Optional counts only (no full response body)
 echo "PAGE1_COUNT=$(echo "$PAGE1" | jq -r '.count')"
 echo "PAGE2_COUNT=$(echo "$PAGE2" | jq -r '.count')"
 echo "PAGE3_COUNT=$(echo "$PAGE3" | jq -r '.count')"
-
-# 9) Count total rows (all products)
-npm run count:products
-
-# 9) Count rows for same pagination filter scope
-npm run count:products -- --category=electronics --minPrice=20 --maxPrice=200
 
 # 10) Pagination utility (attempts up to 5 pages)
 npm run demo:pagination
