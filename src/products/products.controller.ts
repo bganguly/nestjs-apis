@@ -1,7 +1,20 @@
-import { Body, Controller, Get, NotFoundException, Param, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  NotFoundException,
+  Param,
+  Patch,
+  Post,
+  Put,
+  Query,
+} from '@nestjs/common';
 
 import { CreateProductDto } from './dto/create-product.dto';
 import { ListProductsDto } from './dto/list-products.dto';
+import { ReplaceProductDto } from './dto/replace-product.dto';
+import { UpdateProductDto } from './dto/update-product.dto';
 import { ProductsService } from './products.service';
 
 @Controller('products')
@@ -21,6 +34,36 @@ export class ProductsController {
     }
 
     return item;
+  }
+
+  @Put(':id')
+  async replace(@Param('id') id: string, @Body() payload: ReplaceProductDto) {
+    const item = await this.productsService.replace(id, payload);
+    if (!item) {
+      throw new NotFoundException('Product not found');
+    }
+
+    return item;
+  }
+
+  @Patch(':id')
+  async update(@Param('id') id: string, @Body() payload: UpdateProductDto) {
+    const item = await this.productsService.update(id, payload);
+    if (!item) {
+      throw new NotFoundException('Product not found');
+    }
+
+    return item;
+  }
+
+  @Delete(':id')
+  async remove(@Param('id') id: string) {
+    const deleted = await this.productsService.remove(id);
+    if (!deleted) {
+      throw new NotFoundException('Product not found');
+    }
+
+    return { deleted: true };
   }
 
   @Get()

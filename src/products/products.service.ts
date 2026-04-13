@@ -1,11 +1,19 @@
 import { randomUUID } from 'node:crypto';
 
-import { PutCommand, GetCommand, QueryCommand, QueryCommandInput } from '@aws-sdk/lib-dynamodb';
+import {
+  DeleteCommand,
+  GetCommand,
+  PutCommand,
+  QueryCommand,
+  QueryCommandInput,
+} from '@aws-sdk/lib-dynamodb';
 import { BadRequestException, Injectable } from '@nestjs/common';
 
 import { DynamoDbService } from '../dynamodb/dynamodb.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { ListProductsDto } from './dto/list-products.dto';
+import { ReplaceProductDto } from './dto/replace-product.dto';
+import { UpdateProductDto } from './dto/update-product.dto';
 import { Product } from './models/product.model';
 
 type ProductRow = Product & {
@@ -27,14 +35,12 @@ export class ProductsService {
     const now = new Date().toISOString();
     const productId = randomUUID();
 
-    const item: ProductRow = {
-      productId,
+    const item = this.toProductRow(productId, {
       title: payload.title,
       brand: payload.brand,
       category: payload.category,
       subcategory: payload.subcategory,
-      price: Number(payload.price.toFixed(2)),
-      currency: 'USD',
+      price: payload.price,
       rating: payload.rating,
       ratingCount: payload.ratingCount,
       inStock: true,
@@ -44,15 +50,7 @@ export class ProductsService {
       tags: payload.tags,
       createdAt: now,
       updatedAt: now,
-      pk: this.productPk(productId),
-      sk: 'META',
-      gsi1pk: `CATEGORY#${slugify(payload.category)}`,
-      gsi1sk: `PRICE#${priceSortKey(payload.price)}#${productId}`,
-      gsi2pk: `BRAND#${slugify(payload.brand)}`,
-      gsi2sk: `CREATED#${now}#${productId}`,
-      gsi3pk: 'ALL_PRODUCTS',
-      gsi3sk: `CREATED#${now}#${productId}`,
-    };
+    });
 
     await this.dynamoDbService.client.send(
       new PutCommand({
@@ -63,6 +61,96 @@ export class ProductsService {
     );
 
     return toProduct(item);
+  }
+
+  async replace(productId: string, payload: ReplaceProductDto): Promise<Product | null> {
+    const existing = await this.findByIdRow(productId);
+    if (!existing) {
+      return null;
+    }
+
+    const now = new Date().toISOString();
+    const item = this.toProductRow(productId, {
+      title: payload.title,
+      brand: payload.brand,
+      category: payload.category,
+      subcategory: payload.subcategory,
+      price: payload.price,
+      rating: payload.rating,
+      ratingCount: payload.ratingCount,
+      inStock: existing.inStock,
+      imageUrl: payload.imageUrl,
+      description: payload.description,
+      seller: payload.seller,
+      tags: payload.tags,
+      createdAt: existing.createdAt,
+      updatedAt: now,
+    });
+
+    await this.dynamoDbService.client.send(
+      new PutCommand({
+        TableName: this.dynamoDbService.tableName,
+        Item: item,
+        ConditionExpression: 'attribute_exists(pk)',
+      }),
+    );
+
+    return toProduct(item);
+  }
+
+  async update(productId: string, payload: UpdateProductDto): Promise<Product | null> {
+    const existing = await this.findByIdRow(productId);
+    if (!existing) {
+      return null;
+    }
+
+    const now = new Date().toISOString();
+    const item = this.toProductRow(productId, {
+      title: payload.title ?? existing.title,
+      brand: payload.brand ?? existing.brand,
+      category: payload.category ?? existing.category,
+      subcategory: payload.subcategory ?? existing.subcategory,
+      price: payload.price ?? existing.price,
+      rating: payload.rating ?? existing.rating,
+      ratingCount: payload.ratingCount ?? existing.ratingCount,
+      inStock: payload.inStock ?? existing.inStock,
+      imageUrl: payload.imageUrl ?? existing.imageUrl,
+      description: payload.description ?? existing.description,
+      seller: payload.seller ?? existing.seller,
+      tags: payload.tags ?? existing.tags,
+      createdAt: existing.createdAt,
+      updatedAt: now,
+    });
+
+    await this.dynamoDbService.client.send(
+      new PutCommand({
+        TableName: this.dynamoDbService.tableName,
+        Item: item,
+        ConditionExpression: 'attribute_exists(pk)',
+      }),
+    );
+
+    return toProduct(item);
+  }
+
+  async remove(productId: string): Promise<boolean> {
+    const existing = await this.findByIdRow(productId);
+    if (!existing) {
+      return false;
+    }
+
+    await this.dynamoDbService.client.send(
+      new DeleteCommand({
+        TableName: this.dynamoDbService.tableName,
+        Key: {
+          pk: this.productPk(productId),
+          sk: 'META',
+        },
+        ConditionExpression: 'attribute_exists(pk)',
+      }),
+    );
+
+    return true;
   }
 
   async findById(productId: string): Promise<Product | null> {
@@ -183,6 +271,71 @@ export class ProductsService {
 
   private productPk(productId: string): string {
     return `PRODUCT#${productId}`;
+  }
+
+  private async findByIdRow(productId: string): Promise<ProductRow | null> {
+    const response = await this.dynamoDbService.client.send(
+      new GetCommand({
+        TableName: this.dynamoDbService.tableName,
+        Key: {
+          pk: this.productPk(productId),
+          sk: 'META',
+        },
+      }),
+    );
+
+    if (!response.Item) {
+      return null;
+    }
+
+    return response.Item as ProductRow;
+  }
+
+  private toProductRow(
+    productId: string,
+    payload: {
+      title: string;
+      brand: string;
+      category: string;
+      subcategory?: string;
+      price: number;
+      rating?: number;
+      ratingCount?: number;
+      inStock: boolean;
+      imageUrl?: string;
+      description?: string;
+      seller?: string;
+      tags?: string[];
+      createdAt: string;
+      updatedAt: string;
+    },
+  ): ProductRow {
+    return {
+      productId,
+      title: payload.title,
+      brand: payload.brand,
+      category: payload.category,
+      subcategory: payload.subcategory,
+      price: Number(payload.price.toFixed(2)),
+      currency: 'USD',
+      rating: payload.rating,
+      ratingCount: payload.ratingCount,
+      inStock: payload.inStock,
+      imageUrl: payload.imageUrl,
+      description: payload.description,
+      seller: payload.seller,
+      tags: payload.tags,
+      createdAt: payload.createdAt,
+      updatedAt: payload.updatedAt,
+      pk: this.productPk(productId),
+      sk: 'META',
+      gsi1pk: `CATEGORY#${slugify(payload.category)}`,
+      gsi1sk: `PRICE#${priceSortKey(payload.price)}#${productId}`,
+      gsi2pk: `BRAND#${slugify(payload.brand)}`,
+      gsi2sk: `CREATED#${payload.createdAt}#${productId}`,
+      gsi3pk: 'ALL_PRODUCTS',
+      gsi3sk: `CREATED#${payload.createdAt}#${productId}`,
+    };
   }
 }
 

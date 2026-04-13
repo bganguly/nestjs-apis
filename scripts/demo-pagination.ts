@@ -17,6 +17,8 @@ async function main(): Promise<void> {
   const maxPrice = args.maxPrice ?? 200;
   const limit = args.limit ?? 10;
 
+  console.log(`Attempting up to ${pages} pages (limit=${limit})...`);
+
   let cursor: string | null = null;
 
   for (let page = 1; page <= pages; page += 1) {
@@ -47,7 +49,7 @@ async function main(): Promise<void> {
       console.log(`Got cursor: ${cursor}`);
     } else {
       console.log('Got cursor: <none>');
-      console.log('No more pages.');
+      console.log(`No more pages. Stopped at page ${page} of requested ${pages}.`);
       break;
     }
   }

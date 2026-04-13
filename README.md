@@ -230,7 +230,45 @@ curl -s "http://localhost:3000/api/products?category=electronics&minPrice=20&max
 curl -s "http://localhost:3000/api/products/<PRODUCT_ID>" | jq
 ```
 
-5. Full manual pagination sequence (page 1, then page 2, then page 3):
+5. Replace product (PUT):
+
+```bash
+curl -s -X PUT "http://localhost:3000/api/products/<PRODUCT_ID>" \
+	-H "Content-Type: application/json" \
+	-d '{
+		"title": "Bluetooth Speaker Mini v2",
+		"brand": "SoundPeak",
+		"category": "electronics",
+		"subcategory": "audio",
+		"price": 59.99,
+		"rating": 4.5,
+		"ratingCount": 410,
+		"imageUrl": "https://images.example.com/speaker-mini-v2.jpg",
+		"description": "Portable speaker with better battery life.",
+		"seller": "SoundPeak Store",
+		"tags": ["portable", "wireless", "bluetooth"]
+	}' | jq
+```
+
+6. Partial update product (PATCH):
+
+```bash
+curl -s -X PATCH "http://localhost:3000/api/products/<PRODUCT_ID>" \
+	-H "Content-Type: application/json" \
+	-d '{
+		"price": 54.99,
+		"inStock": true,
+		"tags": ["portable", "sale"]
+	}' | jq
+```
+
+7. Delete product (DELETE):
+
+```bash
+curl -s -X DELETE "http://localhost:3000/api/products/<PRODUCT_ID>" | jq
+```
+
+8. Full manual pagination sequence (page 1, then page 2, then page 3):
 
 Fetch page 1 and print cursor only.
 
@@ -266,7 +304,7 @@ echo "PAGE2_COUNT=$(echo "$PAGE2" | jq -r '.count')"
 echo "PAGE3_COUNT=$(echo "$PAGE3" | jq -r '.count')"
 ```
 
-6. Count total rows before/after pagination tests:
+9. Count total rows before/after pagination tests:
 
 Count all available product rows:
 
@@ -282,7 +320,7 @@ npm run count:products -- --category=electronics --minPrice=20 --maxPrice=200
 
 You can run the count once before pagination and once after to verify whether the underlying dataset size changed.
 
-7. Pagination utility (attempts up to 5 pages, stops early if no `nextCursor`):
+10. Pagination utility (attempts up to 5 pages, stops early if no `nextCursor`):
 
 ```bash
 npm run demo:pagination
@@ -307,11 +345,22 @@ Example output style:
 
 - `POST /api/products`
 - `GET /api/products/:id`
+- `PUT /api/products/:id`
+- `PATCH /api/products/:id`
+- `DELETE /api/products/:id`
 - `GET /api/products?category=electronics&minPrice=100&maxPrice=1200&limit=20&cursor=<token>`
 - `GET /api/products?brand=apple&limit=20`
 - `GET /api/products?limit=20`
 
 Response for list includes `nextCursor` for pagination.
+
+## Cursor vs Page/Offset
+
+Many UIs show page numbers, but this API intentionally uses cursor pagination for DynamoDB scale.
+
+- Offset pagination is expensive in DynamoDB because there is no native `OFFSET`; deep pages require reading and discarding prior items.
+- Cursor pagination uses the returned `nextCursor` as an opaque continuation token, keeping reads proportional to page size.
+- Frontends typically do not inspect cursor contents; they store and resend it while still presenting page numbers in the UI.
 
 ## Example Create Payload
 
