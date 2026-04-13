@@ -2,6 +2,32 @@
 
 An idiomatic NestJS REST API for ecommerce-style products, designed to start small and scale to millions of items in DynamoDB.
 
+## Quick Run (Smallest Possible)
+
+1. Install dependencies:
+
+```bash
+npm install
+```
+
+2. Start infra + API:
+
+```bash
+npm run quickstart
+```
+
+3. Quick check:
+
+```bash
+curl -s "http://localhost:3000/api/products?limit=5" | jq
+```
+
+4. Simplest teardown:
+
+```bash
+npm run infra:down
+```
+
 The data shape is user-relatable and React-friendly: title, brand, category, price, rating, image URL, description, stock, and tags.
 
 ## Why This Data Model
@@ -202,10 +228,21 @@ curl -s "http://localhost:3000/api/products?category=electronics&minPrice=20&max
 curl -s "http://localhost:3000/api/products/<PRODUCT_ID>" | jq
 ```
 
-5. Cursor pagination (replace `<CURSOR_FROM_PREVIOUS_RESPONSE>`):
+5. Cursor pagination without manual copy mistakes:
+
+Get first page and save its cursor.
 
 ```bash
-curl -s "http://localhost:3000/api/products?limit=10&cursor=<CURSOR_FROM_PREVIOUS_RESPONSE>" | jq
+FIRST_PAGE=$(curl -s "http://localhost:3000/api/products?category=electronics&minPrice=20&maxPrice=200&limit=10")
+echo "$FIRST_PAGE" | jq
+CURSOR=$(echo "$FIRST_PAGE" | jq -r '.nextCursor')
+```
+
+Fetch next page using the same filters and URL-encoded cursor.
+
+```bash
+ENCODED_CURSOR=$(printf '%s' "$CURSOR" | jq -sRr @uri)
+curl -s "http://localhost:3000/api/products?category=electronics&minPrice=20&maxPrice=200&limit=10&cursor=$ENCODED_CURSOR" | jq
 ```
 
 ## Endpoints
