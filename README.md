@@ -3,6 +3,23 @@
 An idiomatic NestJS REST API for ecommerce-style products, designed to start small and scale to millions of items in DynamoDB.
 The item data shape is user-relatable and React-friendly: title, brand, category, price, rating, image URL, description, stock, and tags.
 
+## Table of Contents
+
+- [Quick Run (Smallest Possible)](#quick-run-smallest-possible)
+- [Tech Stack](#tech-stack)
+- [DynamoDB Table Design](#dynamodb-table-design)
+- [Setup](#setup)
+- [Quickstart (Infra Up/Down)](#quickstart-infra-updown)
+- [Create Table](#create-table)
+- [Add Data](#add-data)
+- [Run API](#run-api)
+- [API Smoke Tests (curl)](#api-smoke-tests-curl)
+- [Endpoints](#endpoints)
+- [Cursor vs Page/Offset](#cursor-vs-pageoffset)
+- [Example Create Payload](#example-create-payload)
+- [Scale Guidance](#scale-guidance)
+- [React App Compatibility](#react-app-compatibility)
+
 
 ## Quick Run (Smallest Possible)
 
@@ -21,13 +38,6 @@ npm run infra:down
 ```
 
 If `quickstart` is running in the current terminal, run the quick check and teardown in a second terminal.
-
-
-## Why This Data Model
-
-- Easy to consume in product grid/detail/filter UI.
-- Supports scalable access patterns with DynamoDB GSIs.
-- Works with both real imported data and synthetic generated data.
 
 ## Tech Stack
 
