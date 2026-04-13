@@ -131,6 +131,11 @@ Item keys:
 
 This avoids full table scans for common list views, which is important at million-item scale.
 
+Note on table creation approach:
+
+- The scripts in this repo are optimized for local/dev setup speed.
+- In production, prefer Infrastructure as Code (Terraform/CDK/CloudFormation) to provision DynamoDB tables/indexes and keep infra changes versioned/reviewable.
+
 ### Create Table
 
 ```bash
