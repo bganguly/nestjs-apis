@@ -7,13 +7,14 @@ The item data shape is user-relatable and React-friendly: title, brand, category
 
 - [Quick Run (Smallest Possible)](#quick-run-smallest-possible)
 - [Tech Stack](#tech-stack)
-- [DynamoDB Table Design](#dynamodb-table-design)
+- [Database (Table + Indexes)](#database-table--indexes)
 - [Setup](#setup)
 - [Quickstart (Infra Up/Down)](#quickstart-infra-updown)
 - [Create Table](#create-table)
 - [Add Data](#add-data)
+- [API](#api)
 - [Run API](#run-api)
-- [API Smoke Tests (curl)](#api-smoke-tests-curl)
+- [Smoke Tests (curl)](#smoke-tests-curl)
 - [Endpoints](#endpoints)
 - [Cursor vs Page/Offset](#cursor-vs-pageoffset)
 - [Example Create Payload](#example-create-payload)
@@ -47,7 +48,9 @@ If `quickstart` is running in the current terminal, run the quick check and tear
 - `class-validator` + `class-transformer`
 - Optional synthetic data via `@faker-js/faker`
 
-## DynamoDB Table Design
+## Database (Table + Indexes)
+
+### Table
 
 Single table: `Products` (name configurable)
 
@@ -59,7 +62,7 @@ Item keys:
 - `pk = PRODUCT#<productId>`
 - `sk = META`
 
-Indexes:
+### Indexes
 
 - `GSI1` for category + price queries
 	- `gsi1pk = CATEGORY#<slug(category)>`
@@ -151,7 +154,9 @@ Notes:
 - Amazon-derived datasets can be much larger and realistic.
 - Always verify per-dataset license and allowed use.
 
-## Run API
+## API
+
+### Run API
 
 ```bash
 # Dev mode
@@ -164,7 +169,7 @@ npm run start:prod
 
 Base URL: `http://localhost:3000/api`
 
-## API Smoke Tests (curl)
+### Smoke Tests (curl)
 
 After starting the API, run these from another terminal.
 
@@ -269,7 +274,7 @@ Example output style:
 - `Got cursor: <cursor-value>`
 - ... up to page 5, or earlier if `nextCursor` becomes empty.
 
-## Endpoints
+### Endpoints
 
 - `POST /api/products`
 - `GET /api/products/:id`
@@ -282,7 +287,7 @@ Example output style:
 
 Response for list includes `nextCursor` for pagination.
 
-## Cursor vs Page/Offset
+### Cursor vs Page/Offset
 
 Many UIs show page numbers, but this API intentionally uses cursor pagination for DynamoDB scale.
 
