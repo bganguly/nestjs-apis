@@ -7,9 +7,10 @@ The item data shape is user-relatable and React-friendly: title, brand, category
 
 - [Quick Run (Smallest Possible)](#quick-run-smallest-possible)
 - [Tech Stack](#tech-stack)
-- [Database (Table + Indexes)](#database-table--indexes)
 - [Setup](#setup)
 - [Quickstart (Infra Up/Down)](#quickstart-infra-updown)
+- [Database (Table + Indexes)](#database-table--indexes)
+	- [Table](#table)
 - [Create Table](#create-table)
 - [Add Data](#add-data)
 - [API](#api)
@@ -47,34 +48,6 @@ If `quickstart` is running in the current terminal, run the quick check and tear
 - TypeScript
 - `class-validator` + `class-transformer`
 - Optional synthetic data via `@faker-js/faker`
-
-## Database (Table + Indexes)
-
-### Table
-
-Single table: `Products` (name configurable)
-
-- PK: `pk`
-- SK: `sk`
-
-Item keys:
-
-- `pk = PRODUCT#<productId>`
-- `sk = META`
-
-### Indexes
-
-- `GSI1` for category + price queries
-	- `gsi1pk = CATEGORY#<slug(category)>`
-	- `gsi1sk = PRICE#<zero-padded-cents>#<productId>`
-- `GSI2` for brand listing (newest first)
-	- `gsi2pk = BRAND#<slug(brand)>`
-	- `gsi2sk = CREATED#<iso>#<productId>`
-- `GSI3` for global newest products feed
-	- `gsi3pk = ALL_PRODUCTS`
-	- `gsi3sk = CREATED#<iso>#<productId>`
-
-This avoids full table scans for common list views, which is important at million-item scale.
 
 ## Setup
 
@@ -128,6 +101,34 @@ Notes:
 - `quickstart` keeps the terminal attached while the API is running.
 - For AWS cloud usage, ensure AWS credentials are configured in your environment.
 - For local DynamoDB, set `AWS_ENDPOINT` in `.env`.
+
+## Database (Table + Indexes)
+
+### Table
+
+Single table: `Products` (name configurable)
+
+- PK: `pk`
+- SK: `sk`
+
+Item keys:
+
+- `pk = PRODUCT#<productId>`
+- `sk = META`
+
+### Indexes
+
+- `GSI1` for category + price queries
+	- `gsi1pk = CATEGORY#<slug(category)>`
+	- `gsi1sk = PRICE#<zero-padded-cents>#<productId>`
+- `GSI2` for brand listing (newest first)
+	- `gsi2pk = BRAND#<slug(brand)>`
+	- `gsi2sk = CREATED#<iso>#<productId>`
+- `GSI3` for global newest products feed
+	- `gsi3pk = ALL_PRODUCTS`
+	- `gsi3sk = CREATED#<iso>#<productId>`
+
+This avoids full table scans for common list views, which is important at million-item scale.
 
 ## Create Table
 
