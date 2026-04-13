@@ -266,10 +266,33 @@ echo "PAGE2_COUNT=$(echo "$PAGE2" | jq -r '.count')"
 echo "PAGE3_COUNT=$(echo "$PAGE3" | jq -r '.count')"
 ```
 
-6. Pagination utility (auto-walk up to 5 pages):
+6. Count total rows before/after pagination tests:
+
+Count all available product rows:
+
+```bash
+npm run count:products
+```
+
+Count rows for the same filter scope you paginate:
+
+```bash
+npm run count:products -- --category=electronics --minPrice=20 --maxPrice=200
+```
+
+You can run the count once before pagination and once after to verify whether the underlying dataset size changed.
+
+7. Pagination utility (attempts up to 5 pages, stops early if no `nextCursor`):
 
 ```bash
 npm run demo:pagination
+```
+
+If your dataset returns fewer than 5 pages, this will stop early (expected behavior).
+To force more pages for testing, use a smaller page size:
+
+```bash
+npm run demo:pagination -- --limit=2 --pages=5
 ```
 
 Example output style:
@@ -278,7 +301,7 @@ Example output style:
 - `Got cursor: <cursor-value>`
 - `Fetching page 2...`
 - `Got cursor: <cursor-value>`
-- ... up to page 5 or until cursor is empty.
+- ... up to page 5, or earlier if `nextCursor` becomes empty.
 
 ## Endpoints
 
