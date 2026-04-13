@@ -4,25 +4,31 @@ An idiomatic NestJS REST API for ecommerce-style products, designed to start sma
 
 ## Quick Run (Smallest Possible)
 
-1. Install dependencies:
+1. Start clean (remove old dependencies):
+
+```bash
+rm -rf node_modules
+```
+
+2. Install dependencies:
 
 ```bash
 npm install
 ```
 
-2. Start infra + API:
+3. Start infra + API:
 
 ```bash
 npm run quickstart
 ```
 
-3. Quick check:
+4. Quick check:
 
 ```bash
 curl -s "http://localhost:3000/api/products?limit=5" | jq
 ```
 
-4. Simplest teardown:
+5. Simplest teardown:
 
 ```bash
 npm run infra:down
