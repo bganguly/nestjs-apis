@@ -1,40 +1,36 @@
 # NestJS Products API + DynamoDB
 
 An idiomatic NestJS REST API for ecommerce-style products, designed to start small and scale to millions of items in DynamoDB.
+The data shape is user-relatable and React-friendly: title, brand, category, price, rating, image URL, description, stock, and tags.
+
 
 ## Quick Run (Smallest Possible)
 
-1. Start clean (remove old dependencies):
+1. Start clean and install dependencies:
 
 ```bash
-rm -rf node_modules
-```
-
-2. Install dependencies:
-
-```bash
+rm -rf node_modules && \
 npm install
 ```
 
-3. Start infra + API:
+2. Start infra + API:
 
 ```bash
 npm run quickstart
 ```
 
-4. Quick check:
+3. Quick check (in a new terminal):
 
 ```bash
 curl -s "http://localhost:3000/api/products?limit=5" | jq
 ```
 
-5. Simplest teardown:
+4. Simplest teardown:
 
 ```bash
 npm run infra:down
 ```
 
-The data shape is user-relatable and React-friendly: title, brand, category, price, rating, image URL, description, stock, and tags.
 
 ## Why This Data Model
 
