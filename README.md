@@ -68,6 +68,51 @@ DYNAMODB_TABLE_NAME=Products
 # AWS_ENDPOINT=http://localhost:8000
 ```
 
+## Quickstart (Infra Up/Down)
+
+This project includes a simplified lifecycle flow:
+
+- `infra:up`: creates the DynamoDB table and seeds initial data.
+- `infra:down`: deletes the DynamoDB table.
+- `quickstart`: runs `infra:up`, then starts the API in dev mode.
+
+1. One-command startup (infra + API):
+
+```bash
+npm run quickstart
+```
+
+This keeps the terminal attached while the API is running.
+
+2. Bring infra up only (default 1000 items):
+
+```bash
+npm run infra:up
+```
+
+3. Optional custom seed size:
+
+```bash
+npm run infra:up -- --count=5000 --batch=25
+```
+
+4. Start API in a second terminal:
+
+```bash
+npm run start:dev
+```
+
+5. Tear infra down when done:
+
+```bash
+npm run infra:down
+```
+
+Notes:
+
+- For AWS cloud usage, ensure AWS credentials are configured in your environment.
+- For local DynamoDB, set `AWS_ENDPOINT` in `.env`.
+
 ## Create Table
 
 ```bash
@@ -112,6 +157,54 @@ npm run start:prod
 ```
 
 Base URL: `http://localhost:3000/api`
+
+## API Smoke Tests (curl)
+
+After starting the API, run these from another terminal.
+
+1. List products:
+
+```bash
+curl -s "http://localhost:3000/api/products?limit=5" | jq
+```
+
+2. Create a product:
+
+```bash
+curl -s -X POST "http://localhost:3000/api/products" \
+	-H "Content-Type: application/json" \
+	-d '{
+		"title": "Bluetooth Speaker Mini",
+		"brand": "SoundPeak",
+		"category": "electronics",
+		"subcategory": "audio",
+		"price": 49.99,
+		"rating": 4.4,
+		"ratingCount": 321,
+		"imageUrl": "https://images.example.com/speaker-mini.jpg",
+		"description": "Portable speaker with USB-C fast charging.",
+		"seller": "SoundPeak Store",
+		"tags": ["portable", "wireless"]
+	}' | jq
+```
+
+3. List by category and price:
+
+```bash
+curl -s "http://localhost:3000/api/products?category=electronics&minPrice=20&maxPrice=200&limit=10" | jq
+```
+
+4. Fetch by product ID (replace `<PRODUCT_ID>`):
+
+```bash
+curl -s "http://localhost:3000/api/products/<PRODUCT_ID>" | jq
+```
+
+5. Cursor pagination (replace `<CURSOR_FROM_PREVIOUS_RESPONSE>`):
+
+```bash
+curl -s "http://localhost:3000/api/products?limit=10&cursor=<CURSOR_FROM_PREVIOUS_RESPONSE>" | jq
+```
 
 ## Endpoints
 

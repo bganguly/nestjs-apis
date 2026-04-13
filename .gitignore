@@ -4,3 +4,9 @@ dist
 .DS_Store
 npm-debug.log*
 *.tsbuildinfo
+packagage-lock.json
+yarn.lock
+.idea
+.vscode
+coverage
+*.log

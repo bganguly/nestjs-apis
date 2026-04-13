@@ -10,6 +10,10 @@
     "start:prod": "node dist/main.js",
     "lint": "eslint \"src/**/*.ts\" \"scripts/**/*.ts\"",
     "create:table": "ts-node scripts/create-products-table.ts",
+    "delete:table": "ts-node scripts/delete-products-table.ts",
+    "infra:up": "ts-node scripts/infra-up.ts",
+    "infra:down": "npm run delete:table",
+    "quickstart": "npm run infra:up && npm run start:dev",
     "seed:synthetic": "ts-node scripts/seed-synthetic-products.ts",
     "import:csv": "ts-node scripts/import-products-csv.ts"
   },
