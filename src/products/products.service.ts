@@ -94,6 +94,7 @@ export class ProductsService {
 
     let command: QueryCommandInput;
     const exclusiveStartKey = decodeCursor(query.cursor);
+    validateCursorForQuery(exclusiveStartKey, query);
 
     if (query.category) {
       command = {
@@ -233,7 +234,8 @@ function decodeCursor(cursor: string | undefined): Record<string, unknown> | und
   }
 
   try {
-    const decoded = Buffer.from(cursor, 'base64url').toString('utf8');
+    const normalizedCursor = decodeURIComponent(cursor);
+    const decoded = Buffer.from(normalizedCursor, 'base64url').toString('utf8');
     const parsed = JSON.parse(decoded) as unknown;
 
     if (!parsed || typeof parsed !== 'object') {
@@ -242,6 +244,56 @@ function decodeCursor(cursor: string | undefined): Record<string, unknown> | und
 
     return parsed as Record<string, unknown>;
   } catch {
-    throw new BadRequestException('Invalid cursor');
+    throw new BadRequestException(
+      'Invalid cursor. Use nextCursor exactly as returned by the previous response.',
+    );
   }
+}
+
+function validateCursorForQuery(cursor: Record<string, unknown> | undefined, query: ListProductsDto): void {
+  if (!cursor) {
+    return;
+  }
+
+  const expectedScope = query.category ? 'category' : query.brand ? 'brand' : 'all';
+  const actualScope = inferCursorScope(cursor);
+
+  if (!actualScope || actualScope !== expectedScope) {
+    throw new BadRequestException(
+      'Cursor does not match this query. Keep the same filters (category/brand/price) used to obtain nextCursor.',
+    );
+  }
+
+  if (expectedScope === 'category') {
+    const expectedCategoryPk = `CATEGORY#${slugify(query.category as string)}`;
+    if (cursor.gsi1pk !== expectedCategoryPk) {
+      throw new BadRequestException('Cursor category does not match the current category filter.');
+    }
+  }
+
+  if (expectedScope === 'brand') {
+    const expectedBrandPk = `BRAND#${slugify(query.brand as string)}`;
+    if (cursor.gsi2pk !== expectedBrandPk) {
+      throw new BadRequestException('Cursor brand does not match the current brand filter.');
+    }
+  }
+}
+
+function inferCursorScope(cursor: Record<string, unknown>): 'category' | 'brand' | 'all' | null {
+  const hasGsi1 = typeof cursor.gsi1pk === 'string' && typeof cursor.gsi1sk === 'string';
+  if (hasGsi1) {
+    return 'category';
+  }
+
+  const hasGsi2 = typeof cursor.gsi2pk === 'string' && typeof cursor.gsi2sk === 'string';
+  if (hasGsi2) {
+    return 'brand';
+  }
+
+  const hasGsi3 = typeof cursor.gsi3pk === 'string' && typeof cursor.gsi3sk === 'string';
+  if (hasGsi3) {
+    return 'all';
+  }
+
+  return null;
 }
