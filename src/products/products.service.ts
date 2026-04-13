@@ -6,6 +6,7 @@ import {
   PutCommand,
   QueryCommand,
   QueryCommandInput,
+  ScanCommand,
 } from '@aws-sdk/lib-dynamodb';
 import { BadRequestException, Injectable } from '@nestjs/common';
 
@@ -25,6 +26,11 @@ type ProductRow = Product & {
   gsi2sk: string;
   gsi3pk: string;
   gsi3sk: string;
+};
+
+type CategoryScanRow = {
+  gsi1pk?: string;
+  category?: string;
 };
 
 @Injectable()
@@ -267,6 +273,60 @@ export class ProductsService {
       nextCursor: encodeCursor(response.LastEvaluatedKey),
       count: response.Count ?? 0,
     };
+  }
+
+  async listCategories(): Promise<{ items: Array<{ category: string; productCount: number }>; count: number }> {
+    const categoryCountBySlug = new Map<string, { category: string; productCount: number }>();
+
+    let exclusiveStartKey: Record<string, unknown> | undefined;
+    do {
+      const response = await this.dynamoDbService.client.send(
+        new ScanCommand({
+          TableName: this.dynamoDbService.tableName,
+          IndexName: 'GSI1',
+          ProjectionExpression: '#gsi1pk, #category',
+          ExpressionAttributeNames: {
+            '#gsi1pk': 'gsi1pk',
+            '#category': 'category',
+          },
+          ExclusiveStartKey: exclusiveStartKey,
+        }),
+      );
+
+      const rows = (response.Items as CategoryScanRow[] | undefined) ?? [];
+      for (const row of rows) {
+        const gsi1pk = row.gsi1pk;
+        if (!gsi1pk || !gsi1pk.startsWith('CATEGORY#')) {
+          continue;
+        }
+
+        const slug = gsi1pk.slice('CATEGORY#'.length);
+        const existing = categoryCountBySlug.get(slug);
+        if (existing) {
+          existing.productCount += 1;
+          continue;
+        }
+
+        categoryCountBySlug.set(slug, {
+          category: row.category ?? slug,
+          productCount: 1,
+        });
+      }
+
+      exclusiveStartKey = response.LastEvaluatedKey as Record<string, unknown> | undefined;
+    } while (exclusiveStartKey);
+
+    const items = [...categoryCountBySlug.values()].sort((a, b) => a.category.localeCompare(b.category));
+
+    return {
+      items,
+      count: items.length,
+    };
+  }
+
+  async countDistinctCategories(): Promise<{ distinctCategoryCount: number }> {
+    const categories = await this.listCategories();
+    return { distinctCategoryCount: categories.count };
   }
 
   private productPk(productId: string): string {

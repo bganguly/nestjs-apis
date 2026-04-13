@@ -17,6 +17,7 @@ The item data shape is user-relatable and React-friendly: title, brand, category
   - [Run API](#run-api)
   - [Smoke Tests (curl)](#smoke-tests-curl)
   - [Endpoints](#endpoints)
+	- [DynamoDB Aggregation Note](#dynamodb-aggregation-note)
   - [Cursor vs Page/Offset](#cursor-vs-pageoffset)
   - [Example Create Payload](#example-create-payload)
   - [Scale Guidance](#scale-guidance)
@@ -230,38 +231,44 @@ curl -s -X PATCH "http://localhost:3000/api/products/<PRODUCT_ID>" \
 # 7) Delete product (DELETE)
 curl -s -X DELETE "http://localhost:3000/api/products/<PRODUCT_ID>" | jq
 
-# 8) Count total rows (all products)
+# 8) List distinct categories (with product counts)
+curl -s "http://localhost:3000/api/products/categories" | jq
+
+# 9) Count distinct categories
+curl -s "http://localhost:3000/api/products/categories/count" | jq
+
+# 10) Count total rows (all products)
 npm run count:products
 
-# 8) Count rows for same pagination filter scope
+# 10) Count rows for same pagination filter scope
 npm run count:products -- --category=electronics --minPrice=20 --maxPrice=200
 
-# 9) Manual pagination page 1 + cursor
+# 11) Manual pagination page 1 + cursor
 PAGE1=$(curl -s "http://localhost:3000/api/products?category=electronics&minPrice=20&maxPrice=200&limit=10")
 CURSOR1=$(echo "$PAGE1" | jq -r '.nextCursor')
 echo "CURSOR1=$CURSOR1"
 
-# 9) Manual pagination page 2 + cursor
+# 11) Manual pagination page 2 + cursor
 ENCODED_CURSOR1=$(printf '%s' "$CURSOR1" | jq -sRr @uri)
 PAGE2=$(curl -s "http://localhost:3000/api/products?category=electronics&minPrice=20&maxPrice=200&limit=10&cursor=$ENCODED_CURSOR1")
 CURSOR2=$(echo "$PAGE2" | jq -r '.nextCursor')
 echo "CURSOR2=$CURSOR2"
 
-# 9) Manual pagination page 3 + cursor
+# 11) Manual pagination page 3 + cursor
 ENCODED_CURSOR2=$(printf '%s' "$CURSOR2" | jq -sRr @uri)
 PAGE3=$(curl -s "http://localhost:3000/api/products?category=electronics&minPrice=20&maxPrice=200&limit=10&cursor=$ENCODED_CURSOR2")
 CURSOR3=$(echo "$PAGE3" | jq -r '.nextCursor')
 echo "CURSOR3=$CURSOR3"
 
-# 9) Optional counts only (no full response body)
+# 11) Optional counts only (no full response body)
 echo "PAGE1_COUNT=$(echo "$PAGE1" | jq -r '.count')"
 echo "PAGE2_COUNT=$(echo "$PAGE2" | jq -r '.count')"
 echo "PAGE3_COUNT=$(echo "$PAGE3" | jq -r '.count')"
 
-# 10) Pagination utility (attempts up to 5 pages)
+# 12) Pagination utility (attempts up to 5 pages)
 npm run demo:pagination
 
-# 10) Force more pages for testing with smaller page size
+# 12) Force more pages for testing with smaller page size
 npm run demo:pagination -- --limit=2 --pages=5
 ```
 
@@ -282,11 +289,20 @@ Example output style:
 - `PUT /api/products/:id`
 - `PATCH /api/products/:id`
 - `DELETE /api/products/:id`
+- `GET /api/products/categories`
+- `GET /api/products/categories/count`
 - `GET /api/products?category=electronics&minPrice=100&maxPrice=1200&limit=20&cursor=<token>`
 - `GET /api/products?brand=apple&limit=20`
 - `GET /api/products?limit=20`
 
 Response for list includes `nextCursor` for pagination.
+
+### DynamoDB Aggregation Note
+
+`/api/products/categories` and `/api/products/categories/count` currently derive distinct categories by scanning `GSI1`.
+
+- This is fine for small-to-medium datasets and local testing.
+- At very large scale, prefer precomputed aggregates (for example, category summary items updated on writes or via Streams) to avoid full index scans.
 
 ### Cursor vs Page/Offset
 

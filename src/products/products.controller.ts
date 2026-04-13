@@ -21,6 +21,16 @@ import { ProductsService } from './products.service';
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
+  @Get('categories')
+  async listCategories() {
+    return this.productsService.listCategories();
+  }
+
+  @Get('categories/count')
+  async countDistinctCategories() {
+    return this.productsService.countDistinctCategories();
+  }
+
   @Post()
   async create(@Body() payload: CreateProductDto) {
     return this.productsService.create(payload);
