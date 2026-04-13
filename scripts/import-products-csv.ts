@@ -3,8 +3,8 @@ import 'dotenv/config';
 import { randomUUID } from 'node:crypto';
 import { createReadStream } from 'node:fs';
 
-import { DynamoDBClient, WriteRequest } from '@aws-sdk/client-dynamodb';
-import { BatchWriteCommand, DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { BatchWriteCommand, DynamoDBDocumentClient, WriteRequest } from '@aws-sdk/lib-dynamodb';
 import { parse } from 'csv-parse';
 
 type GenericRow = Record<string, string | undefined>;
