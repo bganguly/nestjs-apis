@@ -1,7 +1,7 @@
 # NestJS Products API + DynamoDB
 
 An idiomatic NestJS REST API for ecommerce-style products, designed to start small and scale to millions of items in DynamoDB.
-The data shape is user-relatable and React-friendly: title, brand, category, price, rating, image URL, description, stock, and tags.
+The item data shape is user-relatable and React-friendly: title, brand, category, price, rating, image URL, description, stock, and tags.
 
 
 ## Quick Run (Smallest Possible)
