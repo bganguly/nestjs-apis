@@ -232,30 +232,38 @@ curl -s "http://localhost:3000/api/products/<PRODUCT_ID>" | jq
 
 5. Full manual pagination sequence (page 1, then page 2, then page 3):
 
-Fetch page 1 and capture cursor only.
+Fetch page 1 and print cursor only.
 
 ```bash
 PAGE1=$(curl -s "http://localhost:3000/api/products?category=electronics&minPrice=20&maxPrice=200&limit=10")
-echo "$PAGE1" | jq
 CURSOR1=$(echo "$PAGE1" | jq -r '.nextCursor')
 echo "CURSOR1=$CURSOR1"
 ```
 
-Fetch page 2 with cursor from page 1.
+Fetch page 2 with cursor from page 1, then print cursor only.
 
 ```bash
 ENCODED_CURSOR1=$(printf '%s' "$CURSOR1" | jq -sRr @uri)
 PAGE2=$(curl -s "http://localhost:3000/api/products?category=electronics&minPrice=20&maxPrice=200&limit=10&cursor=$ENCODED_CURSOR1")
-echo "$PAGE2" | jq
 CURSOR2=$(echo "$PAGE2" | jq -r '.nextCursor')
 echo "CURSOR2=$CURSOR2"
 ```
 
-Fetch page 3 with cursor from page 2.
+Fetch page 3 with cursor from page 2, then print cursor only.
 
 ```bash
 ENCODED_CURSOR2=$(printf '%s' "$CURSOR2" | jq -sRr @uri)
-curl -s "http://localhost:3000/api/products?category=electronics&minPrice=20&maxPrice=200&limit=10&cursor=$ENCODED_CURSOR2" | jq
+PAGE3=$(curl -s "http://localhost:3000/api/products?category=electronics&minPrice=20&maxPrice=200&limit=10&cursor=$ENCODED_CURSOR2")
+CURSOR3=$(echo "$PAGE3" | jq -r '.nextCursor')
+echo "CURSOR3=$CURSOR3"
+```
+
+Optional: print item counts only (no full response body):
+
+```bash
+echo "PAGE1_COUNT=$(echo "$PAGE1" | jq -r '.count')"
+echo "PAGE2_COUNT=$(echo "$PAGE2" | jq -r '.count')"
+echo "PAGE3_COUNT=$(echo "$PAGE3" | jq -r '.count')"
 ```
 
 6. Pagination utility (auto-walk up to 5 pages):
