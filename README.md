@@ -11,8 +11,8 @@ The item data shape is user-relatable and React-friendly: title, brand, category
 - [Quickstart (Infra Up/Down)](#quickstart-infra-updown)
 - [Database (Table + Indexes)](#database-table--indexes)
 	- [Table](#table)
-- [Create Table](#create-table)
-- [Add Data](#add-data)
+	- [Create Table](#create-table)
+	- [Add Data](#add-data)
 - [API](#api)
 - [Run API](#run-api)
 - [Smoke Tests (curl)](#smoke-tests-curl)
@@ -130,14 +130,14 @@ Item keys:
 
 This avoids full table scans for common list views, which is important at million-item scale.
 
-## Create Table
+### Create Table
 
 ```bash
 # Create the DynamoDB table
 npm run create:table
 ```
 
-## Add Data
+### Add Data
 
 ```bash
 # Option A: synthetic seed (recommended to start)
