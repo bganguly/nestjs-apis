@@ -5,10 +5,10 @@ The item data shape is user-relatable and React-friendly: title, brand, category
 
 ## Table of Contents
 
-- [Quick Run (Smallest Possible)](#quick-run-smallest-possible)
+- [Quick Run](#quick-run)
 - [Tech Stack](#tech-stack)
-- [Setup](#setup)
 - [Quickstart (Infra Up/Down)](#quickstart-infra-updown)
+- [Setup](#setup)
 - [Database (Table + Indexes)](#database-table--indexes)
   - [Table](#table)
   - [Create Table](#create-table)
@@ -23,7 +23,7 @@ The item data shape is user-relatable and React-friendly: title, brand, category
   - [React App Compatibility](#react-app-compatibility)
 
 
-## Quick Run (Smallest Possible)
+## Quick Run
 
 ```bash
 # Start clean and install dependencies
@@ -48,28 +48,6 @@ If `quickstart` is running in the current terminal, run the quick check and tear
 - TypeScript
 - `class-validator` + `class-transformer`
 - Optional synthetic data via `@faker-js/faker`
-
-## Setup
-
-```bash
-# Install deps
-npm install
-
-# Create env file
-cp .env.example .env
-```
-
-Configure `.env`:
-
-```env
-PORT=3000
-AWS_REGION=us-east-1
-DYNAMODB_TABLE_NAME=Products
-# Optional for local DynamoDB
-# AWS_ENDPOINT=http://localhost:8000
-```
-
-If `DYNAMODB_TABLE_NAME` is omitted, the app and scripts default to `Products`.
 
 ## Quickstart (Infra Up/Down)
 
@@ -101,6 +79,28 @@ Notes:
 - `quickstart` keeps the terminal attached while the API is running.
 - For AWS cloud usage, ensure AWS credentials are configured in your environment.
 - For local DynamoDB, set `AWS_ENDPOINT` in `.env`.
+
+## Setup
+
+```bash
+# Install deps
+npm install
+
+# Create env file
+cp .env.example .env
+```
+
+Configure `.env`:
+
+```env
+PORT=3000
+AWS_REGION=us-east-1
+DYNAMODB_TABLE_NAME=Products
+# Optional for local DynamoDB
+# AWS_ENDPOINT=http://localhost:8000
+```
+
+If `DYNAMODB_TABLE_NAME` is omitted, the app and scripts default to `Products`.
 
 ## Database (Table + Indexes)
 
