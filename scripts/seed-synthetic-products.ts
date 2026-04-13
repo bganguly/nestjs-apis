@@ -3,8 +3,7 @@ import 'dotenv/config';
 import { randomUUID } from 'node:crypto';
 
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { BatchWriteCommand, DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
-import { faker } from '@faker-js/faker';
+import { BatchWriteCommand, BatchWriteCommandInput, DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 
 type ProductSeedRow = {
   pk: string;
@@ -61,6 +60,8 @@ const categoryConfig: Record<string, { priceMin: number; priceMax: number; subca
   },
 };
 
+type FakerApi = Awaited<ReturnType<typeof loadFaker>>;
+
 async function main(): Promise<void> {
   const tableName = process.env.DYNAMODB_TABLE_NAME ?? 'Products';
   const region = process.env.AWS_REGION ?? 'us-east-1';
@@ -69,6 +70,7 @@ async function main(): Promise<void> {
   const args = parseArgs(process.argv.slice(2));
   const totalCount = args.count ?? 1000;
   const batchSize = Math.min(args.batch ?? 25, 25);
+  const faker = await loadFaker();
 
   const client = DynamoDBDocumentClient.from(
     new DynamoDBClient({
@@ -83,7 +85,7 @@ async function main(): Promise<void> {
   let written = 0;
   while (written < totalCount) {
     const chunkSize = Math.min(batchSize, totalCount - written);
-    const rows = Array.from({ length: chunkSize }, () => buildProduct());
+    const rows = Array.from({ length: chunkSize }, () => buildProduct(faker));
 
     await writeBatchWithRetry(client, tableName, rows);
 
@@ -94,7 +96,7 @@ async function main(): Promise<void> {
   console.log(`Done. Seeded ${totalCount} synthetic products into ${tableName}`);
 }
 
-function buildProduct(): ProductSeedRow {
+function buildProduct(faker: FakerApi): ProductSeedRow {
   const category = faker.helpers.arrayElement(Object.keys(categoryConfig));
   const config = categoryConfig[category];
   const subcategory = faker.helpers.arrayElement(config.subcategories);
@@ -140,7 +142,7 @@ async function writeBatchWithRetry(
   tableName: string,
   rows: ProductSeedRow[],
 ): Promise<void> {
-  let requestItems = {
+  let requestItems: NonNullable<BatchWriteCommandInput['RequestItems']> = {
     [tableName]: rows.map((row) => ({
       PutRequest: {
         Item: row,
@@ -168,8 +170,15 @@ async function writeBatchWithRetry(
 
     const waitMs = Math.min(1000, 25 * 2 ** attempts);
     await new Promise((resolve) => setTimeout(resolve, waitMs));
-    requestItems = { [tableName]: unprocessed };
+    requestItems = {
+      [tableName]: unprocessed as NonNullable<BatchWriteCommandInput['RequestItems']>[string],
+    };
   }
+}
+
+async function loadFaker() {
+  const mod = await import('@faker-js/faker');
+  return mod.faker;
 }
 
 function parseArgs(args: string[]): { count?: number; batch?: number } {
