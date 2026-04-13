@@ -15,7 +15,8 @@
     "infra:down": "npm run delete:table",
     "quickstart": "npm run infra:up && npm run start:dev",
     "seed:synthetic": "ts-node scripts/seed-synthetic-products.ts",
-    "import:csv": "ts-node scripts/import-products-csv.ts"
+    "import:csv": "ts-node scripts/import-products-csv.ts",
+    "demo:pagination": "ts-node scripts/demo-pagination.ts"
   },
   "repository": {
     "type": "git",

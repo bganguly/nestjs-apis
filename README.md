@@ -230,22 +230,47 @@ curl -s "http://localhost:3000/api/products?category=electronics&minPrice=20&max
 curl -s "http://localhost:3000/api/products/<PRODUCT_ID>" | jq
 ```
 
-5. Cursor pagination without manual copy mistakes:
+5. Full manual pagination sequence (page 1, then page 2, then page 3):
 
-Get first page and save its cursor.
-
-```bash
-FIRST_PAGE=$(curl -s "http://localhost:3000/api/products?category=electronics&minPrice=20&maxPrice=200&limit=10")
-echo "$FIRST_PAGE" | jq
-CURSOR=$(echo "$FIRST_PAGE" | jq -r '.nextCursor')
-```
-
-Fetch next page using the same filters and URL-encoded cursor.
+Fetch page 1 and capture cursor only.
 
 ```bash
-ENCODED_CURSOR=$(printf '%s' "$CURSOR" | jq -sRr @uri)
-curl -s "http://localhost:3000/api/products?category=electronics&minPrice=20&maxPrice=200&limit=10&cursor=$ENCODED_CURSOR" | jq
+PAGE1=$(curl -s "http://localhost:3000/api/products?category=electronics&minPrice=20&maxPrice=200&limit=10")
+echo "$PAGE1" | jq
+CURSOR1=$(echo "$PAGE1" | jq -r '.nextCursor')
+echo "CURSOR1=$CURSOR1"
 ```
+
+Fetch page 2 with cursor from page 1.
+
+```bash
+ENCODED_CURSOR1=$(printf '%s' "$CURSOR1" | jq -sRr @uri)
+PAGE2=$(curl -s "http://localhost:3000/api/products?category=electronics&minPrice=20&maxPrice=200&limit=10&cursor=$ENCODED_CURSOR1")
+echo "$PAGE2" | jq
+CURSOR2=$(echo "$PAGE2" | jq -r '.nextCursor')
+echo "CURSOR2=$CURSOR2"
+```
+
+Fetch page 3 with cursor from page 2.
+
+```bash
+ENCODED_CURSOR2=$(printf '%s' "$CURSOR2" | jq -sRr @uri)
+curl -s "http://localhost:3000/api/products?category=electronics&minPrice=20&maxPrice=200&limit=10&cursor=$ENCODED_CURSOR2" | jq
+```
+
+6. Pagination utility (auto-walk up to 5 pages):
+
+```bash
+npm run demo:pagination
+```
+
+Example output style:
+
+- `Fetching page 1...`
+- `Got cursor: <cursor-value>`
+- `Fetching page 2...`
+- `Got cursor: <cursor-value>`
+- ... up to page 5 or until cursor is empty.
 
 ## Endpoints
 
