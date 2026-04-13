@@ -3,7 +3,7 @@ import 'dotenv/config';
 import { randomUUID } from 'node:crypto';
 import { createReadStream } from 'node:fs';
 
-import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { DynamoDBClient, WriteRequest } from '@aws-sdk/client-dynamodb';
 import { BatchWriteCommand, DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 import { parse } from 'csv-parse';
 
@@ -35,7 +35,7 @@ async function main(): Promise<void> {
     }),
   );
 
-  let batch: Array<{ PutRequest: { Item: Record<string, unknown> } }> = [];
+  let batch: WriteRequest[] = [];
   let total = 0;
 
   for await (const row of parser) {
@@ -149,9 +149,9 @@ function parseArgs(args: string[]): { file?: string } {
 async function writeBatchWithRetry(
   client: DynamoDBDocumentClient,
   tableName: string,
-  batch: Array<{ PutRequest: { Item: Record<string, unknown> } }>,
+  batch: WriteRequest[],
 ): Promise<void> {
-  let requestItems = {
+  let requestItems: Record<string, WriteRequest[]> = {
     [tableName]: batch,
   };
 
