@@ -75,8 +75,29 @@ async function main(): Promise<void> {
     }
   }
 
-  const table = await client.send(new DescribeTableCommand({ TableName: tableName }));
-  console.log(`Table status: ${table.Table?.TableStatus}`);
+  await waitForTableActive(client, tableName);
+}
+
+async function waitForTableActive(client: DynamoDBClient, tableName: string): Promise<void> {
+  const timeoutMs = 120_000;
+  const pollMs = 1_000;
+  const startedAt = Date.now();
+
+  while (true) {
+    const table = await client.send(new DescribeTableCommand({ TableName: tableName }));
+    const status = table.Table?.TableStatus;
+    console.log(`Table status: ${status}`);
+
+    if (status === 'ACTIVE') {
+      return;
+    }
+
+    if (Date.now() - startedAt > timeoutMs) {
+      throw new Error(`Timed out waiting for table ${tableName} to become ACTIVE`);
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, pollMs));
+  }
 }
 
 void main();
