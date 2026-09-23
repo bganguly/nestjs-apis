@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 
 import { DynamoDbModule } from './dynamodb/dynamodb.module';
 import { validateEnv } from './config/env.validation';
+import { HealthController } from './health/health.controller';
 import { ProductsModule } from './products/products.module';
 
 @Module({
@@ -14,5 +15,6 @@ import { ProductsModule } from './products/products.module';
     DynamoDbModule,
     ProductsModule,
   ],
+  controllers: [HealthController],
 })
 export class AppModule {}
